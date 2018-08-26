@@ -92,7 +92,7 @@ public class FlatTO extends AbstractTO {
 	@Override
 	public int hashCode() {
 		return Objects.hash(getId(), getCreatedOn(), getUpdatedOn(), flatNumber, floorArea, numberOfRooms,
-				numberOfBalconies, price, flatStatus, customerIds);
+				numberOfBalconies, price, flatStatus, customerIds,buildingTO);
 	}
 
 	@Override
@@ -192,7 +192,7 @@ public class FlatTO extends AbstractTO {
 				FlatStatus flatStatus, BuildingTO buildingTO) {
 			if (flatNumber == null || flatNumber.isEmpty() || floorArea == 0 || numberOfRooms == 0 || price == 0
 					|| flatStatus == null || buildingTO == null) {
-				throw new RuntimeException("Incorrect base transfer object to be created");
+				throw new RuntimeException("Incorrect flat transfer object to be created");
 			}
 
 		}

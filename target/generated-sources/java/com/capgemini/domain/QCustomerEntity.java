@@ -28,8 +28,6 @@ public class QCustomerEntity extends EntityPathBase<CustomerEntity> {
 
     public final DateTimePath<java.util.Date> birthDate = createDateTime("birthDate", java.util.Date.class);
 
-    public final SetPath<OrderEntity, QOrderEntity> coOwnedFlats = this.<OrderEntity, QOrderEntity>createSet("coOwnedFlats", OrderEntity.class, QOrderEntity.class, PathInits.DIRECT2);
-
     //inherited
     public final DateTimePath<java.util.Date> createdOn = _super.createdOn;
 
@@ -43,8 +41,6 @@ public class QCustomerEntity extends EntityPathBase<CustomerEntity> {
     public final NumberPath<Long> id = _super.id;
 
     public final com.capgemini.embeddable.QName name;
-
-    public final SetPath<OrderEntity, QOrderEntity> ownedFlats = this.<OrderEntity, QOrderEntity>createSet("ownedFlats", OrderEntity.class, QOrderEntity.class, PathInits.DIRECT2);
 
     public final StringPath phoneNumber = createString("phoneNumber");
 

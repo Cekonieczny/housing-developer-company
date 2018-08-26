@@ -2,6 +2,7 @@ package com.capgemini.domain;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -16,8 +17,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import com.capgemini.types.FlatTO;
 
 @Entity
 @EntityListeners(TimestampListener.class)
@@ -50,12 +52,9 @@ public class FlatEntity extends AbstractEntity implements Serializable {
 	private BuildingEntity buildingEntity;
 
 	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(name = "ORDER", joinColumns = { @JoinColumn(name = "customer_id") }, inverseJoinColumns = {
+	@JoinTable(name = "FLAT_ORDER", joinColumns = { @JoinColumn(name = "customer_id") }, inverseJoinColumns = {
 			@JoinColumn(name = "flat_id") })
 	private Set<CustomerEntity> customerEntities = new HashSet<>();
-	
-	@OneToOne(mappedBy = "flatOrdered")
-	private OrderEntity flatOrdered;
 
 	// for hibernate
 	public FlatEntity() {
@@ -147,6 +146,35 @@ public class FlatEntity extends AbstractEntity implements Serializable {
 	public void removeCustomerEntity(CustomerEntity customerEntity) {
 		this.customerEntities.remove(customerEntity);
 		customerEntity.getFlatEntities().remove(this);
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(getId(), getCreatedOn(), getUpdatedOn(), flatNumber, floorArea, numberOfRooms,
+				numberOfBalconies, price, flatStatus, customerEntities,buildingEntity);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		FlatEntity flatEntity = (FlatEntity) obj;
+		return Objects.equals(getId(), flatEntity.getId()) 
+				&& Objects.equals(getCreatedOn(), flatEntity.getCreatedOn())
+				&& Objects.equals(getUpdatedOn(), flatEntity.getUpdatedOn()) 
+				&& Objects.equals(flatNumber, flatEntity.flatNumber)
+				&& Objects.equals(buildingEntity, flatEntity.buildingEntity)
+				&& Objects.equals(customerEntities, flatEntity.customerEntities)
+				&& floorArea == flatEntity.floorArea
+				&& numberOfRooms == flatEntity.numberOfRooms
+				&& numberOfBalconies == flatEntity.numberOfBalconies 
+				&& price == flatEntity.price
+				&& flatStatus == flatEntity.flatStatus;
+				
 	}
 
 }

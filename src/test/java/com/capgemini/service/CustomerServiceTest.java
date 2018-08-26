@@ -22,6 +22,7 @@ import com.capgemini.embeddable.Address;
 import com.capgemini.embeddable.Location;
 import com.capgemini.embeddable.Name;
 import com.capgemini.mappers.CustomerMapper;
+import com.capgemini.service.impl.CustomerServiceImpl;
 import com.capgemini.types.CustomerTO;
 import com.capgemini.types.CustomerTO.CustomerTOBuilder;
 
@@ -35,7 +36,7 @@ public class CustomerServiceTest {
 	private EntityManager em;
 
 	@Autowired
-	CustomerService customerService;
+	CustomerServiceImpl customerService;
 
 	@Autowired
 	CustomerDao customerRepository;

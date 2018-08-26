@@ -33,8 +33,6 @@ public class QFlatEntity extends EntityPathBase<FlatEntity> {
 
     public final StringPath flatNumber = createString("flatNumber");
 
-    public final QOrderEntity flatOrdered;
-
     public final EnumPath<FlatStatus> flatStatus = createEnum("flatStatus", FlatStatus.class);
 
     public final NumberPath<Integer> floorArea = createNumber("floorArea", Integer.class);
@@ -70,7 +68,6 @@ public class QFlatEntity extends EntityPathBase<FlatEntity> {
     public QFlatEntity(Class<? extends FlatEntity> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.buildingEntity = inits.isInitialized("buildingEntity") ? new QBuildingEntity(forProperty("buildingEntity"), inits.get("buildingEntity")) : null;
-        this.flatOrdered = inits.isInitialized("flatOrdered") ? new QOrderEntity(forProperty("flatOrdered"), inits.get("flatOrdered")) : null;
     }
 
 }

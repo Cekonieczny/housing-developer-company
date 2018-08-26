@@ -13,7 +13,6 @@ import javax.persistence.FetchType;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import com.capgemini.embeddable.Address;
@@ -46,12 +45,6 @@ public class CustomerEntity extends AbstractEntity  implements Serializable {
 	
 	@ManyToMany(mappedBy = "customerEntities",fetch = FetchType.LAZY)
 	private Set<FlatEntity> flatEntities = new HashSet<>();
-	
-	@OneToMany(mappedBy = "owner",fetch = FetchType.LAZY)
-	private Set<OrderEntity> ownedFlats = new HashSet<>();
-	
-	@ManyToMany(mappedBy = "coOwners",fetch = FetchType.LAZY)
-	private Set<OrderEntity> coOwnedFlats = new HashSet<>();
 
 	// for hibernate
 	public CustomerEntity() {

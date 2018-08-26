@@ -1,5 +1,6 @@
 package com.capgemini.mappers;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -68,6 +69,9 @@ public class CustomerMapper {
 
 
 	public static Set<CustomerEntity> map2Entities(Set<Long> customerIds) {
+		if(customerIds.isEmpty()){
+			return new HashSet<>();
+		}
 		TypedQuery<CustomerEntity> q = em.createQuery("SELECT c FROM CustomerEntity WHERE c.id in :customerIds",
 				CustomerEntity.class);
 		q.setParameter("customerIds", customerIds);
