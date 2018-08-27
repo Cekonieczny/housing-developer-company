@@ -263,7 +263,10 @@ public class QueriesTest {
 		//List<Long> maxCount = q1.select(qflat.count()).from(qbuilding).join(qbuilding.flatEntities,qflat).on(qflat.flatStatus.eq(FlatStatus.FREE)).groupBy(qbuilding).orderBy(qflat.count().desc()).fetch();
 		/*JPAExpressions.select(qflat.count()).from(qbuilding).join(qbuilding.flatEntities,qflat).on(qflat.flatStatus.eq(FlatStatus.FREE)).groupBy(qbuilding))*/
 		BuildingEntity foundBuilding =  qf.select(qbuilding).join(qbuilding.flatEntities, qflat)
-				.on(qflat.flatStatus.eq(FlatStatus.FREE)).where(qflat.count().eq(JPAExpressions.select(qflat.count().max()).from(qbuilding).join(qbuilding.flatEntities,qflat).on(qflat.flatStatus.eq(FlatStatus.FREE)).groupBy(qbuilding))).fetchOne();
+				.on(qflat.flatStatus.eq(FlatStatus.FREE)).where(qflat.count()
+						.eq(JPAExpressions.select(qflat.count().max()).from(qbuilding)
+								.join(qbuilding.flatEntities,qflat).on(qflat.flatStatus
+										.eq(FlatStatus.FREE)).groupBy(qbuilding))).fetchOne();
 		// then
 		assertEquals(searchedBuilding, foundBuilding);
 	}
