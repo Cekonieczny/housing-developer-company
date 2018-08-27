@@ -39,7 +39,7 @@ public class BuildingServiceTest {
 
 	@Autowired
 	private BuildingService buildingService;
-	
+
 	@Autowired
 	private BuildingMapper bm;
 
@@ -49,7 +49,7 @@ public class BuildingServiceTest {
 		// given
 		BuildingEntity testBuilding = getBuilding();
 		BuildingTO testBuildingTO = bm.toBuildingTO(testBuilding);
-		
+
 		// when
 		BuildingTO savedBuilding = buildingService.saveOrUpdate(testBuildingTO);
 		BuildingEntity buildingEntity = em.find(BuildingEntity.class, savedBuilding.getId());
@@ -59,58 +59,58 @@ public class BuildingServiceTest {
 		assertNotNull(savedBuilding);
 		assertTrue(selectedBuilding.equals(savedBuilding));
 	}
-	
-	/*@Test
-	public void shouldFindCustomer() {
 
-		// given
-		CustomerEntity customerEntity = cm.toCustomerEntity(getTestCustomerTO());
-		em.persist(customerEntity);
-		// when
-		CustomerTO savedCustomer = customerService.findOne(customerEntity.getId());
-
-		// then
-		assertNotNull(savedCustomer);
-		assertEquals(cm.toCustomerTO(customerEntity),savedCustomer);
-	}
-	
 	@Test
-	public void shouldDeleteCustomer() {
+	public void shouldFindBuilding() {
 
 		// given
-		CustomerEntity customerEntity = cm.toCustomerEntity(getTestCustomerTO());
-		em.persist(customerEntity);
+		BuildingEntity buildingEntity = getBuilding();
+		em.persist(buildingEntity);
 		// when
-		customerService.delete(customerEntity.getId());
-		CustomerEntity deletedCustomerEntity = em.find(CustomerEntity.class, customerEntity.getId());
+		BuildingTO savedBuilding = buildingService.findOne(buildingEntity.getId());
 
 		// then
-		assertNull(deletedCustomerEntity);
-	}*/
-	
-	
+		assertNotNull(savedBuilding);
+		assertEquals(bm.toBuildingTO(buildingEntity), savedBuilding);
+	}
 
-	private CustomerEntity getCustomer() {
-		Location location = new Location();
-		location.setBuildingNumber("11");
-		location.setPlaceName("Poznań");
-		location.setStreetName("Warszawska");
-		location.setZipCode("22-333");
-		Address address = new Address();
-		address.setLocation(location);
-		address.setApartmentNumber("22");
-		Date testDate = new Date();
-		Name testName = new Name();
-		testName.setFirstName("firstname");
-		testName.setLastName("lastname");
-		CustomerEntity customerEntity = new CustomerEntity();
-		customerEntity.setAddress(address);
-		customerEntity.setBirthDate(testDate);
-		customerEntity.setCreditCardNumber("123456789123456");
-		customerEntity.setEmail("testemail@email.com");
-		customerEntity.setName(testName);
-		customerEntity.setPhoneNumber("+48123456789");
-		return customerEntity;
+	@Test
+	public void shouldDeleteBuilding() {
+
+		// given
+		BuildingEntity buildingEntity = getBuilding();
+		em.persist(buildingEntity);
+		// when
+		buildingService.delete(buildingEntity.getId());
+		BuildingEntity deletedBuildingEntity = em.find(BuildingEntity.class, buildingEntity.getId());
+
+		// then
+		assertNull(deletedBuildingEntity);
+	}
+
+	@Test
+	public void shouldRemoveAllFlatsAttachedToBuildingByCascadeTypeRemove() {
+		// given
+		BuildingEntity buildingEntity = getBuilding();
+		em.persist(buildingEntity);
+		FlatEntity flatEntity1 = getFlat();
+		FlatEntity flatEntity2 = getFlat();
+		FlatEntity flatEntity3 = getFlat();
+		em.persist(flatEntity1);
+		em.persist(flatEntity2);
+		em.persist(flatEntity3);
+		buildingEntity.addFlatEntity(flatEntity1);
+		buildingEntity.addFlatEntity(flatEntity2);
+		buildingEntity.addFlatEntity(flatEntity3);
+		// when
+		buildingService.delete(buildingEntity.getId());
+		BuildingEntity deletedBuildingEntity = em.find(BuildingEntity.class, buildingEntity.getId());
+		assertNull(deletedBuildingEntity);
+
+		// then
+		assertNull(em.find(FlatEntity.class, flatEntity1.getId()));
+		assertNull(em.find(FlatEntity.class, flatEntity2.getId()));
+		assertNull(em.find(FlatEntity.class, flatEntity3.getId()));
 	}
 
 	private BuildingEntity getBuilding() {

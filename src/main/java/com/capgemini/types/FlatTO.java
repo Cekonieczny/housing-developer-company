@@ -208,7 +208,7 @@ public class FlatTO extends AbstractTO {
 		private void checkBeforeBuild(String flatNumber, int floorArea, int numberOfRooms, int price,
 				FlatStatus flatStatus, BuildingTO buildingTO,String floorNumber) {
 			if (flatNumber == null || flatNumber.isEmpty() || floorArea == 0 || numberOfRooms == 0 || price == 0
-					|| flatStatus == null || buildingTO == null||floorNumber==null) {
+					|| flatStatus == null || floorNumber==null) {
 				throw new RuntimeException("Incorrect flat transfer object to be created");
 			}
 
