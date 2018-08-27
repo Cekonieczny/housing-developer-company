@@ -2,7 +2,6 @@ package com.capgemini.domain;
 
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -19,8 +18,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import com.capgemini.types.FlatTO;
-
 @Entity
 @EntityListeners(TimestampListener.class)
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
@@ -30,6 +27,9 @@ public class FlatEntity extends AbstractEntity implements Serializable {
 
 	@Column(nullable = false, length = 10)
 	private String flatNumber;
+	
+	@Column(nullable = false, length = 6)
+	private String floorNumber;
 
 	@Column(nullable = false)
 	private int floorArea;
@@ -61,7 +61,7 @@ public class FlatEntity extends AbstractEntity implements Serializable {
 		super();
 	}
 
-	public FlatEntity(Long id, String flatNumber, int floorArea, int numberOfRooms, int numberOfBalconies, int price,
+	public FlatEntity(Long id, String flatNumber, String floorNumber, int floorArea, int numberOfRooms, int numberOfBalconies, int price,
 			FlatStatus flatStatus, BuildingEntity buildingEntity, Set<CustomerEntity> customerEntities) {
 		super(id);
 		this.flatNumber = flatNumber;
@@ -72,6 +72,16 @@ public class FlatEntity extends AbstractEntity implements Serializable {
 		this.flatStatus = flatStatus;
 		this.buildingEntity = buildingEntity;
 		this.customerEntities = customerEntities;
+		this.floorNumber=floorNumber;
+	}
+
+	
+	public String getFloorNumber() {
+		return floorNumber;
+	}
+
+	public void setFloorNumber(String floorNumber) {
+		this.floorNumber = floorNumber;
 	}
 
 	public String getFlatNumber() {
@@ -148,33 +158,4 @@ public class FlatEntity extends AbstractEntity implements Serializable {
 		customerEntity.getFlatEntities().remove(this);
 	}
 	
-	@Override
-	public int hashCode() {
-		return Objects.hash(getId(), getCreatedOn(), getUpdatedOn(), flatNumber, floorArea, numberOfRooms,
-				numberOfBalconies, price, flatStatus, customerEntities,buildingEntity);
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		FlatEntity flatEntity = (FlatEntity) obj;
-		return Objects.equals(getId(), flatEntity.getId()) 
-				&& Objects.equals(getCreatedOn(), flatEntity.getCreatedOn())
-				&& Objects.equals(getUpdatedOn(), flatEntity.getUpdatedOn()) 
-				&& Objects.equals(flatNumber, flatEntity.flatNumber)
-				&& Objects.equals(buildingEntity, flatEntity.buildingEntity)
-				&& Objects.equals(customerEntities, flatEntity.customerEntities)
-				&& floorArea == flatEntity.floorArea
-				&& numberOfRooms == flatEntity.numberOfRooms
-				&& numberOfBalconies == flatEntity.numberOfBalconies 
-				&& price == flatEntity.price
-				&& flatStatus == flatEntity.flatStatus;
-				
-	}
-
 }

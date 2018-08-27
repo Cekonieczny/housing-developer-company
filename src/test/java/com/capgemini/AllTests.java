@@ -7,7 +7,7 @@ import org.junit.runners.Suite.SuiteClasses;
 import com.capgemini.service.ServiceTestSuite;
 
 @RunWith(Suite.class)
-@SuiteClasses({ServiceTestSuite.class})
+@SuiteClasses({ServiceTestSuite.class, QueriesTest.class})
 public class AllTests {
 
 }

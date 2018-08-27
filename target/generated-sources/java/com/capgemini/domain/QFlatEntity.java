@@ -37,6 +37,8 @@ public class QFlatEntity extends EntityPathBase<FlatEntity> {
 
     public final NumberPath<Integer> floorArea = createNumber("floorArea", Integer.class);
 
+    public final StringPath floorNumber = createString("floorNumber");
+
     //inherited
     public final NumberPath<Long> id = _super.id;
 

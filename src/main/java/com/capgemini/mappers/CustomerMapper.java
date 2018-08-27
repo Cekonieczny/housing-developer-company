@@ -8,21 +8,28 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.capgemini.domain.CustomerEntity;
 import com.capgemini.domain.FlatEntity;
 import com.capgemini.types.CustomerTO;
 import com.capgemini.types.CustomerTO.CustomerTOBuilder;
 
+@Service
 public class CustomerMapper {
 	
 	@PersistenceContext
-	private static EntityManager em;
+	private EntityManager em;
 	
-	public static CustomerTO toCustomerTO(CustomerEntity customerEntity) {
+	@Autowired
+	private FlatMapper flatMapper;
+	
+	public  CustomerTO toCustomerTO(CustomerEntity customerEntity) {
 		if (customerEntity == null)
 			return null;
 		
-		Set<Long> flatIds = FlatMapper.map2Ids(customerEntity.getFlatEntities());
+		Set<Long> flatIds = flatMapper.map2Ids(customerEntity.getFlatEntities());
 
 		return new CustomerTOBuilder()
 				.withAddress(customerEntity.getAddress())
@@ -37,11 +44,11 @@ public class CustomerMapper {
 				.withFlatIds(flatIds).build();
 	}
 
-	public static CustomerEntity toCustomerEntity(CustomerTO customerTO) {
+	public CustomerEntity toCustomerEntity(CustomerTO customerTO) {
 		if (customerTO == null)
 			return null;
 		
-		Set<FlatEntity> flatEntities = FlatMapper.map2Entities(customerTO.getFlatIds());
+		Set<FlatEntity> flatEntities = flatMapper.map2Entities(customerTO.getFlatIds()).stream().collect(Collectors.toSet());
 
 		CustomerEntity customerEntity = new CustomerEntity();
 		customerEntity.setAddress(customerTO.getAddress());
@@ -59,20 +66,20 @@ public class CustomerMapper {
 		return customerEntity;
 	}
 
-	public static Set<Long> map2Ids(Set<CustomerEntity> customerEntities) {
+	public  Set<Long> map2Ids(Set<CustomerEntity> customerEntities) {
 		return customerEntities.stream().map(CustomerEntity::getId).collect(Collectors.toSet());
 	}
 	
-	public static Set<CustomerTO> map2TOs(Set<CustomerEntity> customerEntities) { 
-		return customerEntities.stream().map(CustomerMapper::toCustomerTO).collect(Collectors.toSet());
+	public  Set<CustomerTO> map2TOs(Set<CustomerEntity> customerEntities) { 
+		return customerEntities.stream().map(this::toCustomerTO).collect(Collectors.toSet());
 	}
 
 
-	public static Set<CustomerEntity> map2Entities(Set<Long> customerIds) {
+	public Set<CustomerEntity> map2Entities(Set<Long> customerIds) {
 		if(customerIds.isEmpty()){
 			return new HashSet<>();
 		}
-		TypedQuery<CustomerEntity> q = em.createQuery("SELECT c FROM CustomerEntity WHERE c.id in :customerIds",
+		TypedQuery<CustomerEntity> q = em.createQuery("SELECT c FROM CustomerEntity c WHERE c.id in :customerIds",
 				CustomerEntity.class);
 		q.setParameter("customerIds", customerIds);
 		return q.getResultList().stream().collect(Collectors.toSet());

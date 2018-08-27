@@ -1,6 +1,8 @@
 package com.capgemini.service;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
@@ -16,13 +18,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.capgemini.dao.CustomerDao;
 import com.capgemini.domain.CustomerEntity;
 import com.capgemini.embeddable.Address;
 import com.capgemini.embeddable.Location;
 import com.capgemini.embeddable.Name;
 import com.capgemini.mappers.CustomerMapper;
-import com.capgemini.service.impl.CustomerServiceImpl;
 import com.capgemini.types.CustomerTO;
 import com.capgemini.types.CustomerTO.CustomerTOBuilder;
 
@@ -36,10 +36,10 @@ public class CustomerServiceTest {
 	private EntityManager em;
 
 	@Autowired
-	CustomerServiceImpl customerService;
-
+	CustomerService customerService;
+	
 	@Autowired
-	CustomerDao customerRepository;
+	CustomerMapper cm;
 
 	@Test
 	public void shouldSaveCustomer() {
@@ -48,12 +48,40 @@ public class CustomerServiceTest {
 		CustomerTO testCustomer = getTestCustomerTO();
 		// when
 		CustomerTO savedCustomer = customerService.saveOrUpdate(testCustomer);
-		CustomerEntity customerEntity = customerRepository.findOne(savedCustomer.getId());
-		CustomerTO selectedCustomer = CustomerMapper.toCustomerTO(customerEntity);
+		CustomerEntity customerEntity = em.find(CustomerEntity.class, savedCustomer.getId());
+		CustomerTO selectedCustomer = cm.toCustomerTO(customerEntity);
 
 		// then
 		assertNotNull(savedCustomer);
 		assertTrue(selectedCustomer.equals(savedCustomer));
+	}
+	
+	@Test
+	public void shouldFindCustomer() {
+
+		// given
+		CustomerEntity customerEntity = cm.toCustomerEntity(getTestCustomerTO());
+		em.persist(customerEntity);
+		// when
+		CustomerTO savedCustomer = customerService.findOne(customerEntity.getId());
+
+		// then
+		assertNotNull(savedCustomer);
+		assertEquals(cm.toCustomerTO(customerEntity),savedCustomer);
+	}
+	
+	@Test
+	public void shouldDeleteCustomer() {
+
+		// given
+		CustomerEntity customerEntity = cm.toCustomerEntity(getTestCustomerTO());
+		em.persist(customerEntity);
+		// when
+		customerService.delete(customerEntity.getId());
+		CustomerEntity deletedCustomerEntity = em.find(CustomerEntity.class, customerEntity.getId());
+
+		// then
+		assertNull(deletedCustomerEntity);
 	}
 	
 	

@@ -128,7 +128,7 @@ public class CustomerEntity extends AbstractEntity  implements Serializable {
 	public void removeFlatEntity(FlatEntity flatEntity) {
 		this.flatEntities.remove(flatEntity);
 		flatEntity.getCustomerEntities().remove(this);
-}
+	}
 	
 	
 }

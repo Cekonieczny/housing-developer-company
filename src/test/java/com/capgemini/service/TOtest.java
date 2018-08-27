@@ -13,8 +13,6 @@ import com.capgemini.domain.FlatStatus;
 import com.capgemini.embeddable.Location;
 import com.capgemini.types.BuildingTO;
 import com.capgemini.types.BuildingTO.BuildingTOBuilder;
-import com.capgemini.types.CustomerTO;
-import com.capgemini.types.CustomerTO.CustomerTOBuilder;
 import com.capgemini.types.FlatTO;
 import com.capgemini.types.FlatTO.FlatTOBuilder;
 

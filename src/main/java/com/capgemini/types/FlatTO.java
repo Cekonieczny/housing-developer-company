@@ -10,6 +10,7 @@ import com.capgemini.domain.FlatStatus;
 public class FlatTO extends AbstractTO {
 
 	private String flatNumber;
+	private String floorNumber;
 	private int floorArea;
 	private int numberOfRooms;
 	private int numberOfBalconies;
@@ -20,7 +21,7 @@ public class FlatTO extends AbstractTO {
 
 	public FlatTO(Long id, Date created, Date updated, String flatNumber, int floorArea, int numberOfRooms,
 			int numberOfBalconies, int price, FlatStatus flatStatus, BuildingTO buildingTO,
-			Set<Long> customerIds) {
+			Set<Long> customerIds, String floorNumber) {
 		super(id, created, updated);
 		this.flatNumber = flatNumber;
 		this.floorArea = floorArea;
@@ -30,6 +31,7 @@ public class FlatTO extends AbstractTO {
 		this.flatStatus = flatStatus;
 		this.buildingTO = buildingTO;
 		this.customerIds = customerIds;
+		this.floorNumber = floorNumber;
 	}
 
 	public String getFlatNumber() {
@@ -91,7 +93,7 @@ public class FlatTO extends AbstractTO {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(getId(), getCreatedOn(), getUpdatedOn(), flatNumber, floorArea, numberOfRooms,
+		return Objects.hash(getId(), getCreatedOn(), getUpdatedOn(), flatNumber, floorArea, floorNumber,numberOfRooms,
 				numberOfBalconies, price, flatStatus, customerIds,buildingTO);
 	}
 
@@ -114,7 +116,8 @@ public class FlatTO extends AbstractTO {
 				&& numberOfRooms == flatTO.numberOfRooms
 				&& numberOfBalconies == flatTO.numberOfBalconies 
 				&& price == flatTO.price
-				&& flatStatus == flatTO.flatStatus;
+				&& flatStatus == flatTO.flatStatus
+				&& floorNumber == flatTO.floorNumber;
 				
 	}
 
@@ -126,9 +129,18 @@ public class FlatTO extends AbstractTO {
 		this.customerIds = customerIds;
 	}
 
+	public String getFloorNumber() {
+		return floorNumber;
+	}
+
+	public void setFloorNumber(String floorNumber) {
+		this.floorNumber = floorNumber;
+	}
+
 	public static class FlatTOBuilder extends AbstractTOBuilder<FlatTOBuilder> {
 	
 		private String flatNumber;
+		private String floorNumber;
 		private int floorArea;
 		private int numberOfRooms;
 		private int numberOfBalconies;
@@ -144,6 +156,11 @@ public class FlatTO extends AbstractTO {
 
 		public FlatTOBuilder withFlatNumber(String flatNumber) {
 			this.flatNumber = flatNumber;
+			return this;
+		}
+		
+		public FlatTOBuilder withFloorNumber(String floorNumber) {
+			this.floorNumber = floorNumber;
 			return this;
 		}
 
@@ -183,15 +200,15 @@ public class FlatTO extends AbstractTO {
 		}
 		
 		public FlatTO build() {
-			checkBeforeBuild(flatNumber, floorArea, numberOfRooms, price, flatStatus, buildingTO);
+			checkBeforeBuild(flatNumber, floorArea, numberOfRooms, price, flatStatus, buildingTO,floorNumber);
 			return new FlatTO(id,createdOn, updatedOn, flatNumber, floorArea,
-					numberOfRooms, numberOfBalconies, price, flatStatus, buildingTO, customerIds);
+					numberOfRooms, numberOfBalconies, price, flatStatus, buildingTO, customerIds,floorNumber);
 		}
 
 		private void checkBeforeBuild(String flatNumber, int floorArea, int numberOfRooms, int price,
-				FlatStatus flatStatus, BuildingTO buildingTO) {
+				FlatStatus flatStatus, BuildingTO buildingTO,String floorNumber) {
 			if (flatNumber == null || flatNumber.isEmpty() || floorArea == 0 || numberOfRooms == 0 || price == 0
-					|| flatStatus == null || buildingTO == null) {
+					|| flatStatus == null || buildingTO == null||floorNumber==null) {
 				throw new RuntimeException("Incorrect flat transfer object to be created");
 			}
 

@@ -1,12 +1,15 @@
 package com.capgemini.mappers;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.capgemini.domain.BuildingEntity;
 import com.capgemini.domain.CustomerEntity;
@@ -16,17 +19,21 @@ import com.capgemini.types.FlatTO;
 import com.capgemini.types.FlatTO.FlatTOBuilder;
 
 
-
+@Service
 public class FlatMapper {
 	@PersistenceContext
-	private static EntityManager em;
+	private EntityManager em;
+	@Autowired
+	private CustomerMapper cm;
+	@Autowired
+	private BuildingMapper bm;
 	
-	public static FlatTO toFlatTO(FlatEntity flatEntity) {
+	public  FlatTO toFlatTO(FlatEntity flatEntity) {
 		if (flatEntity == null)
 			return null;
 
-		BuildingTO buildingTO = BuildingMapper.toBuildingTO(flatEntity.getBuildingEntity());
-		Set<Long> customerIds = CustomerMapper.map2Ids(flatEntity.getCustomerEntities());
+		BuildingTO buildingTO = bm.toBuildingTO(flatEntity.getBuildingEntity());
+		Set<Long> customerIds = cm.map2Ids(flatEntity.getCustomerEntities());
 
 		return new FlatTOBuilder().withBuildingTO(buildingTO)
 				.withCreatedOn(flatEntity.getCreatedOn())
@@ -38,15 +45,16 @@ public class FlatMapper {
 				.withNumberOfBalconies(flatEntity.getNumberOfBalconies())
 				.withNumberOfRooms(flatEntity.getNumberOfRooms())
 				.withPrice(flatEntity.getPrice())
-				.withUpdatedOn(flatEntity.getUpdatedOn()).build();
+				.withUpdatedOn(flatEntity.getUpdatedOn())
+				.withFloorNumber(flatEntity.getFloorNumber()).build();
 	}
 
-	public static FlatEntity toFlatEntity(FlatTO flatTO) {
+	public  FlatEntity toFlatEntity(FlatTO flatTO) {
 		if (flatTO == null)
 			return null;
 
-		BuildingEntity buildingEntity = BuildingMapper.toBuildingEntity(flatTO.getBuildingTO());
-		Set<CustomerEntity> customerEntities = CustomerMapper.map2Entities(flatTO.getCustomerIds());
+		BuildingEntity buildingEntity = bm.toBuildingEntity(flatTO.getBuildingTO());
+		Set<CustomerEntity> customerEntities = cm.map2Entities(flatTO.getCustomerIds());
 
 		FlatEntity flatEntity = new FlatEntity();
 		flatEntity.setBuildingEntity(buildingEntity);
@@ -60,24 +68,25 @@ public class FlatMapper {
 		flatEntity.setNumberOfRooms(flatTO.getNumberOfRooms());
 		flatEntity.setPrice(flatTO.getPrice());
 		flatEntity.setUpdatedOn(flatTO.getUpdatedOn());
+		flatEntity.setFloorNumber(flatTO.getFloorNumber());
 
 		return flatEntity;
 	}
 
-	public static Set<Long> map2Ids(Set<FlatEntity> flatEntities) {
+	public  Set<Long> map2Ids(Set<FlatEntity> flatEntities) {
 		return flatEntities.stream().map(FlatEntity::getId).collect(Collectors.toSet());
 	}
 	
-	public static Set<FlatTO> map2TOs(Set<FlatEntity> flatEntities) {
-		return flatEntities.stream().map(FlatMapper::toFlatTO).collect(Collectors.toSet());
+	public   Set<FlatTO> map2TOs(Set<FlatEntity> flatEntities) {
+		return flatEntities.stream().map(this::toFlatTO).collect(Collectors.toSet());
 	}
 
-	public static Set<FlatEntity> map2Entities(Set<Long> flatIds) {
-		if(flatIds.size()==0){
+	public  Set<FlatEntity> map2Entities(Set<Long> flatIds) {
+		if(flatIds.isEmpty()){
 			return new HashSet<>();
 		}
-		TypedQuery<FlatEntity> q = em.createQuery("SELECT f FROM FlatEntity WHERE f.id in :flatIds", FlatEntity.class);
-		q.setParameter("flatIds", flatIds);
-			return q.getResultList().stream().collect(Collectors.toSet());
+		List<Long> listOfIds = flatIds.stream().collect(Collectors.toList());
+		List<FlatEntity> flatEntities = em.createQuery("SELECT f FROM FlatEntity f WHERE f.id IN :flatIds").setParameter("flatIds", listOfIds).getResultList();
+		return flatEntities.stream().collect(Collectors.toSet());
 	}
 }

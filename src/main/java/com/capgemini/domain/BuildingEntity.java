@@ -114,4 +114,6 @@ public class BuildingEntity extends AbstractEntity implements Serializable {
 		this.flatEntities.remove(flatEntity);
 		flatEntity.setBuildingEntity(null);
 	}
+	
+
 }

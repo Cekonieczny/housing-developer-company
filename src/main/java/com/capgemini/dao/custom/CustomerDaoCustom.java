@@ -1,5 +1,11 @@
 package com.capgemini.dao.custom;
 
-public interface CustomerDaoCustom {
+import java.util.Set;
 
+import com.capgemini.domain.CustomerEntity;
+
+public interface CustomerDaoCustom {
+	Integer findSumOfFlatPricesBoughtByGivenCustomer(Long customerId);
+
+	Set<CustomerEntity> findCustomersWhoBoughtMoreThanOneFlat();
 }

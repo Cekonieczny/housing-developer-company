@@ -1,10 +1,12 @@
 package com.capgemini;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -12,24 +14,23 @@ import javax.persistence.PersistenceContext;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.capgemini.dao.BuildingDao;
+import com.capgemini.dao.CustomerDao;
+import com.capgemini.dao.FlatDao;
 import com.capgemini.domain.BuildingEntity;
 import com.capgemini.domain.CustomerEntity;
 import com.capgemini.domain.FlatEntity;
 import com.capgemini.domain.FlatStatus;
-import com.capgemini.domain.QBuildingEntity;
-import com.capgemini.domain.QCustomerEntity;
-import com.capgemini.domain.QFlatEntity;
 import com.capgemini.embeddable.Address;
 import com.capgemini.embeddable.Location;
 import com.capgemini.embeddable.Name;
+import com.capgemini.mappers.CustomerMapper;
 import com.capgemini.searchcriteria.FlatSizeSearchCriteria;
-import com.querydsl.jpa.JPAExpressions;
-import com.querydsl.jpa.impl.JPAQuery;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 
 @Transactional
 @RunWith(SpringRunner.class)
@@ -40,12 +41,21 @@ public class QueriesTest {
 	@PersistenceContext
 	EntityManager em;
 
+	@Autowired
+	CustomerMapper cm;
+
+	@Autowired
+	FlatDao flatRepository;
+
+	@Autowired
+	BuildingDao buildingRepository;
+
+	@Autowired
+	CustomerDao customerRepository;
+
 	@Test
 	public void shouldExecuteQuerySumOfFlatPricesBoughtByGivenCustomer() {
 		// given
-		JPAQueryFactory qf = new JPAQueryFactory(em);
-		QFlatEntity qflat = QFlatEntity.flatEntity;
-		QCustomerEntity qcustomer = QCustomerEntity.customerEntity;
 		CustomerEntity customerEntity = getCustomer();
 		FlatEntity flatEntitySold = getFlat();
 
@@ -70,8 +80,7 @@ public class QueriesTest {
 		int sumExpected = flatEntitySold.getPrice() + flatEntitySold2.getPrice();
 
 		// when
-		Integer sum = qf.select(qflat.price.sum()).from(qcustomer).join(qcustomer.flatEntities, qflat)
-				.on(qflat.flatStatus.eq(FlatStatus.SOLD)).where(qcustomer.id.eq(customerId)).fetchOne();
+		Integer sum = customerRepository.findSumOfFlatPricesBoughtByGivenCustomer(customerId);
 		int sumActual = sum;
 		// then
 		Assert.assertEquals(sumActual, sumExpected);
@@ -103,7 +112,9 @@ public class QueriesTest {
 		searchCriteriaTo.setFloorArea(searchedFloorArea);
 		searchCriteriaTo.setNumberOfBalconies(searchedNumberOfBalconies);
 		searchCriteriaTo.setNumberOfRooms(searchedNumberOfRooms);
-		List<FlatEntity> listOfFlats = findNotSoldFlatsBySizeCriteria(searchCriteriaFrom, searchCriteriaTo);
+
+		List<FlatEntity> listOfFlats = flatRepository.findNotSoldFlatsBySizeCriteria(searchCriteriaFrom,
+				searchCriteriaTo);
 
 		// then
 		assertEquals(selectedFlatEntity, listOfFlats.iterator().next());
@@ -131,7 +142,8 @@ public class QueriesTest {
 		// when
 		FlatSizeSearchCriteria searchCriteriaFrom = new FlatSizeSearchCriteria();
 		FlatSizeSearchCriteria searchCriteriaTo = new FlatSizeSearchCriteria();
-		List<FlatEntity> listOfFlats = findNotSoldFlatsBySizeCriteria(searchCriteriaFrom, searchCriteriaTo);
+		List<FlatEntity> listOfFlats = flatRepository.findNotSoldFlatsBySizeCriteria(searchCriteriaFrom,
+				searchCriteriaTo);
 
 		// then
 		assertEquals(3, listOfFlats.size());
@@ -158,7 +170,8 @@ public class QueriesTest {
 		searchCriteriaFrom.setFloorArea(searchedFloorArea);
 		FlatSizeSearchCriteria searchCriteriaTo = new FlatSizeSearchCriteria();
 		searchCriteriaTo.setFloorArea(searchedFloorArea);
-		List<FlatEntity> listOfFlats = findNotSoldFlatsBySizeCriteria(searchCriteriaFrom, searchCriteriaTo);
+		List<FlatEntity> listOfFlats = flatRepository.findNotSoldFlatsBySizeCriteria(searchCriteriaFrom,
+				searchCriteriaTo);
 
 		// then
 		assertEquals(listOfFlats.iterator().next(), selectedFlatEntity);
@@ -167,9 +180,6 @@ public class QueriesTest {
 	@Test
 	public void shouldExecuteQueryFindAvgFlatPriceInACertainBuilding() {
 		// given
-		JPAQueryFactory qf = new JPAQueryFactory(em);
-		QFlatEntity qflat = QFlatEntity.flatEntity;
-		QBuildingEntity qbuilding = QBuildingEntity.buildingEntity;
 		BuildingEntity buildingEntity = getBuilding();
 		FlatEntity flatEntity1 = getFlat();
 		FlatEntity flatEntity2 = getFlat();
@@ -188,8 +198,7 @@ public class QueriesTest {
 		Double avgExpected = (double) ((flatEntity1.getPrice() + flatEntity2.getPrice()) / 2);
 
 		// when
-		Double avg = qf.select(qflat.price.avg()).from(qbuilding).join(qbuilding.flatEntities, qflat)
-				.on(qbuilding.id.eq(buildingId)).fetchOne();
+		Double avg = buildingRepository.findAvgFlatPriceInACertainBuilding(buildingId);
 		// then
 		Assert.assertEquals(avgExpected, avg);
 	}
@@ -197,9 +206,6 @@ public class QueriesTest {
 	@Test
 	public void shouldExecuteQueryFindCustomersWhoBoughtMoreThanOneFlat() {
 		// given
-		JPAQueryFactory qf = new JPAQueryFactory(em);
-		QFlatEntity qflat = QFlatEntity.flatEntity;
-		QCustomerEntity qcustomer = QCustomerEntity.customerEntity;
 		FlatEntity flatEntity1 = getFlat();
 		flatEntity1.setFlatStatus(FlatStatus.SOLD);
 		FlatEntity flatEntity2 = getFlat();
@@ -212,63 +218,54 @@ public class QueriesTest {
 		customer1.addFlatEntity(flatEntity2);
 		em.persist(customer1);
 		CustomerEntity customer2 = getCustomer();
-		customer1.addFlatEntity(flatEntity1);
-		customer1.addFlatEntity(flatEntity2);
+		customer2.addFlatEntity(flatEntity1);
+		customer2.addFlatEntity(flatEntity2);
 		em.persist(customer2);
 
-		for (int i = 0; i < 2; i++) {
-			CustomerEntity customer = getCustomer();
-			customer.addFlatEntity(flatEntity1);
-			em.persist(customer);
-		}
+		CustomerEntity customer3 = getCustomer();
+		customer3.addFlatEntity(flatEntity1);
+		em.persist(customer3);
 
-		Long minFlatCount = 1L;
+		CustomerEntity customer4 = getCustomer();
+		customer4.addFlatEntity(flatEntity1);
+		em.persist(customer4);
 
 		// when
-		List<CustomerEntity> listOfCustomers = qf.selectFrom(qcustomer).join(qcustomer.flatEntities, qflat)
-				.on(qflat.flatStatus.eq(FlatStatus.SOLD)).where(qcustomer.flatEntities.size().gt(minFlatCount)).fetch();
+		Set<CustomerEntity> setOfCustomers = customerRepository.findCustomersWhoBoughtMoreThanOneFlat();
 		// then
-		assertEquals(2, listOfCustomers.size());
+		assertEquals(2, setOfCustomers.size());
 	}
-	
+
 	@Test
-	public void shouldExecuteQueryFindBuildingWithMostFlatsFree() {
-		JPAQueryFactory qf = new JPAQueryFactory(em);
-		QFlatEntity qflat = QFlatEntity.flatEntity;
-		QBuildingEntity qbuilding = QBuildingEntity.buildingEntity;
+	public void shouldExecuteQueryFindBuildingWithMostQuantityOfFlatsFree() {
 		BuildingEntity searchedBuilding = getBuilding();
 		BuildingEntity buildingEntity = getBuilding();
 		FlatEntity flatEntityFree1 = getFlat();
 		FlatEntity flatEntityFree2 = getFlat();
+		FlatEntity flatEntityFree3 = getFlat();
 		FlatEntity flatEntitySold = getFlat();
 		flatEntitySold.setFlatStatus(FlatStatus.SOLD);
 		FlatEntity flatEntityReserved = getFlat();
-		flatEntitySold.setFlatStatus(FlatStatus.RESERVED);
+		flatEntityReserved.setFlatStatus(FlatStatus.RESERVED);
 
-		// create 1st purchase order
 		em.persist(searchedBuilding);
 		em.persist(buildingEntity);
 		em.persist(flatEntityFree1);
 		em.persist(flatEntityFree2);
+		em.persist(flatEntityFree3);
 		em.persist(flatEntitySold);
 		em.persist(flatEntityReserved);
 		searchedBuilding.addFlatEntity(flatEntityFree1);
 		searchedBuilding.addFlatEntity(flatEntityFree2);
-		buildingEntity.addFlatEntity(flatEntityFree1);
+		buildingEntity.addFlatEntity(flatEntityFree3);
 		buildingEntity.addFlatEntity(flatEntitySold);
 		buildingEntity.addFlatEntity(flatEntityReserved);
-
 		// when
-		JPAQuery<Long> q1 = new JPAQuery<Long>(em);
-		//List<Long> maxCount = q1.select(qflat.count()).from(qbuilding).join(qbuilding.flatEntities,qflat).on(qflat.flatStatus.eq(FlatStatus.FREE)).groupBy(qbuilding).orderBy(qflat.count().desc()).fetch();
-		/*JPAExpressions.select(qflat.count()).from(qbuilding).join(qbuilding.flatEntities,qflat).on(qflat.flatStatus.eq(FlatStatus.FREE)).groupBy(qbuilding))*/
-		BuildingEntity foundBuilding =  qf.select(qbuilding).join(qbuilding.flatEntities, qflat)
-				.on(qflat.flatStatus.eq(FlatStatus.FREE)).where(qflat.count()
-						.eq(JPAExpressions.select(qflat.count().max()).from(qbuilding)
-								.join(qbuilding.flatEntities,qflat).on(qflat.flatStatus
-										.eq(FlatStatus.FREE)).groupBy(qbuilding))).fetchOne();
+		List<BuildingEntity> foundBuildings = buildingRepository.findBuildingWithMostQuantityOfFlatsFree();
 		// then
-		assertEquals(searchedBuilding, foundBuilding);
+		assertEquals(1, foundBuildings.size());
+		assertEquals(searchedBuilding, foundBuildings.get(0));
+
 	}
 
 	@Test
@@ -291,9 +288,46 @@ public class QueriesTest {
 		Long countExpected = 2L;
 
 		// when
-		Long count = findFlatCountOfGivenStatusInACertainBuilding(flatStatus, buildingId);
+		Long count = flatRepository.findFlatCountOfGivenStatusInACertainBuilding(flatStatus, buildingId);
 		// then
 		Assert.assertEquals(countExpected, count);
+	}
+
+	@Test
+	public void shouldExecuteQueryFindFlatsSuitedForHandicapped() {
+		// given
+		BuildingEntity buildingWithLift = getBuilding();
+		buildingWithLift.setHasLift(true);
+		BuildingEntity buildingWithNoLift = getBuilding();
+		buildingWithNoLift.setHasLift(false);
+		FlatEntity flatOnFloor1WithLift = getFlat();
+		flatOnFloor1WithLift.setFloorNumber("1");
+		FlatEntity flatOnFloor0WithLift = getFlat();
+		flatOnFloor0WithLift.setFloorNumber("0");
+		FlatEntity flatOnFloor0WithNoLift = getFlat();
+		flatOnFloor0WithNoLift.setFloorNumber("0");
+		FlatEntity flatOnFloor3WithNoLift = getFlat();
+		flatOnFloor3WithNoLift.setFloorNumber("3");
+
+		// create 1st purchase order
+		em.persist(buildingWithNoLift);
+		em.persist(buildingWithLift);
+		em.persist(flatOnFloor1WithLift);
+		em.persist(flatOnFloor0WithLift);
+		em.persist(flatOnFloor0WithNoLift);
+		em.persist(flatOnFloor3WithNoLift);
+		buildingWithLift.addFlatEntity(flatOnFloor1WithLift);
+		buildingWithLift.addFlatEntity(flatOnFloor0WithLift);
+		buildingWithNoLift.addFlatEntity(flatOnFloor0WithNoLift);
+		buildingWithNoLift.addFlatEntity(flatOnFloor3WithNoLift);
+
+		// when
+		List<FlatEntity> listOfFlats = flatRepository.findFlatsSuitedForHandicapped();
+		// then
+		assertEquals(3, listOfFlats.size());
+		assertTrue(listOfFlats.contains(flatOnFloor1WithLift));
+		assertTrue(listOfFlats.contains(flatOnFloor0WithLift));
+		assertTrue(listOfFlats.contains(flatOnFloor0WithNoLift));
 	}
 
 	private CustomerEntity getCustomer() {
@@ -352,84 +386,9 @@ public class QueriesTest {
 		flatEntity.setNumberOfBalconies(numberOfBalconies);
 		flatEntity.setNumberOfRooms(numberOfRooms);
 		flatEntity.setPrice(price);
+		flatEntity.setFloorNumber("3");
 
 		return flatEntity;
-	}
-
-	private void save20CustomersToMemoryDB() {
-		for (int i = 0; i < 20; i++) {
-			em.persist(getCustomer());
-		}
-	}
-
-	private void save20FlatsToMemoryDB() {
-		for (int i = 0; i < 20; i++) {
-			em.persist(getCustomer());
-		}
-	}
-
-	private void save20PurchaseOrdersToMemoryDB() {
-		for (int i = 0; i < 20; i++) {
-			save1PurchaseOrderToMemoryDB();
-		}
-	}
-
-	private void save20ReservedOrdersToMemoryDB() {
-		for (int i = 0; i < 20; i++) {
-			save1ReservedOrderToMemoryDB();
-		}
-	}
-
-	private void save1PurchaseOrderToMemoryDB() {
-		CustomerEntity customerEntity = getCustomer();
-		FlatEntity flatEntity = getFlat();
-		em.persist(customerEntity);
-		em.persist(flatEntity);
-		flatEntity.setFlatStatus(FlatStatus.SOLD);
-		flatEntity.addCustomerEntity(customerEntity);
-	}
-
-	private void save1ReservedOrderToMemoryDB() {
-
-		CustomerEntity customerEntity = getCustomer();
-		FlatEntity flatEntity = getFlat();
-		em.persist(customerEntity);
-		em.persist(flatEntity);
-		flatEntity.setFlatStatus(FlatStatus.RESERVED);
-		flatEntity.addCustomerEntity(customerEntity);
-
-	}
-
-	private List<FlatEntity> findNotSoldFlatsBySizeCriteria(FlatSizeSearchCriteria flatSizeSearchCriteriaFrom,
-			FlatSizeSearchCriteria flatSizeSearchCriteriaTo) {
-		JPAQuery<FlatEntity> q = new JPAQuery<FlatEntity>(em);
-		QFlatEntity qflat = QFlatEntity.flatEntity;
-
-		q.from(qflat).select(qflat).where(qflat.flatStatus.ne(FlatStatus.SOLD));
-		if (flatSizeSearchCriteriaFrom.getFloorArea() != null && flatSizeSearchCriteriaTo.getFloorArea() != null) {
-			q.where(qflat.floorArea.between(flatSizeSearchCriteriaFrom.getFloorArea(),
-					flatSizeSearchCriteriaTo.getFloorArea()));
-		}
-		if (flatSizeSearchCriteriaFrom.getNumberOfBalconies() != null
-				&& flatSizeSearchCriteriaTo.getNumberOfBalconies() != null) {
-			q.where(qflat.numberOfBalconies.between(flatSizeSearchCriteriaFrom.getNumberOfBalconies(),
-					flatSizeSearchCriteriaTo.getNumberOfBalconies()));
-		}
-		if (flatSizeSearchCriteriaFrom.getNumberOfRooms() != null
-				&& flatSizeSearchCriteriaTo.getNumberOfRooms() != null) {
-			q.where(qflat.numberOfRooms.between(flatSizeSearchCriteriaFrom.getNumberOfRooms(),
-					flatSizeSearchCriteriaTo.getNumberOfRooms()));
-		}
-		return q.fetch();
-
-	}
-
-	private Long findFlatCountOfGivenStatusInACertainBuilding(FlatStatus flatStatus, Long buildingId) {
-		JPAQueryFactory qf = new JPAQueryFactory(em);
-		QFlatEntity qflat = QFlatEntity.flatEntity;
-		QBuildingEntity qbuilding = QBuildingEntity.buildingEntity;
-		return qf.select(qflat.count()).from(qbuilding).join(qbuilding.flatEntities, qflat)
-				.on(qbuilding.id.eq(buildingId)).where(qflat.flatStatus.eq(flatStatus)).fetchOne();
 	}
 
 }

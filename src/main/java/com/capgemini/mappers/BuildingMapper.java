@@ -7,21 +7,27 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.capgemini.domain.BuildingEntity;
 import com.capgemini.domain.FlatEntity;
 import com.capgemini.types.BuildingTO;
 import com.capgemini.types.BuildingTO.BuildingTOBuilder;
-
+@Service
 public class BuildingMapper {
 
 	@PersistenceContext
-	private static EntityManager em;
+	private EntityManager em;
+	
+	@Autowired
+	private FlatMapper fm;
 
-	public static BuildingTO toBuildingTO(BuildingEntity buildingEntity) {
+	public  BuildingTO toBuildingTO(BuildingEntity buildingEntity) {
 		if (buildingEntity == null)
 			return null;
 		
-		Set<Long> flatIds = FlatMapper.map2Ids(buildingEntity.getFlatEntities());
+		Set<Long> flatIds = fm.map2Ids(buildingEntity.getFlatEntities());
 		
 		return new BuildingTOBuilder()
 				.withNumberOfFloors(buildingEntity.getNumberOfFloors())
@@ -36,11 +42,11 @@ public class BuildingMapper {
 				.withFlatIds(flatIds).build();
 	}
 
-	public static BuildingEntity toBuildingEntity(BuildingTO buildingTO) {
+	public  BuildingEntity toBuildingEntity(BuildingTO buildingTO) {
 		if (buildingTO == null)
 			return null;
 		
-		Set<FlatEntity> flatEntities = FlatMapper.map2Entities(buildingTO.getFlatIds());
+		Set<FlatEntity> flatEntities = fm.map2Entities(buildingTO.getFlatIds());
 
 		BuildingEntity buildingEntity = new BuildingEntity();
 		buildingEntity.setCreatedOn(buildingTO.getCreatedOn());
@@ -56,15 +62,15 @@ public class BuildingMapper {
 		return buildingEntity;
 	}
 
-	public static Set<Long> map2Ids(Set<BuildingEntity> buildingEntities) {
+	public  Set<Long> map2Ids(Set<BuildingEntity> buildingEntities) {
 		return buildingEntities.stream().map(BuildingEntity::getId).collect(Collectors.toSet());
 	}
 	
-	public static Set<BuildingTO> map2TOs(Set<BuildingEntity> buildingEntities) {
-		return buildingEntities.stream().map(BuildingMapper::toBuildingTO).collect(Collectors.toSet());
+	public  Set<BuildingTO> map2TOs(Set<BuildingEntity> buildingEntities) {
+		return buildingEntities.stream().map(this::toBuildingTO).collect(Collectors.toSet());
 	}
 
-	public static Set<BuildingEntity> map2Entities(Set<Long> buildingIds) {
+	public  Set<BuildingEntity> map2Entities(Set<Long> buildingIds) {
 		TypedQuery<BuildingEntity> q = em.createQuery("SELECT b FROM BuildingEntity WHERE b.id in :buildingIds",
 				BuildingEntity.class);
 		q.setParameter("buildingIds", buildingIds);
